@@ -71,12 +71,16 @@ namespace ClinicalOffice.ValidationFramework
         {
             return ValidateRules(obj, propertyName)?.ErrorMessage;
         }
-        public static IEnumerable<string> ValidateRulesAsString(object obj)
+        public static string ValidateRulesAsString(object obj)
+        {
+            return string.Concat(ValidateRulesAsStrings(obj).Select(s => s + "\n")).Trim();
+        }
+        public static IEnumerable<string> ValidateRulesAsStrings(object obj)
         {
             return ValidateRules(obj).Select(e=>e.ErrorMessage).ToList();
         }
         #endregion
-        #region Validate Rules
+        #region Validate Attributes
         public static ValidationError ValidateAttributes(object obj, string propertyName, object value)
         {
             IEnumerable< ValidationAttribute> attributes = PropertyHelper.GetValidationAttributes(obj.GetType(), propertyName);
@@ -113,7 +117,11 @@ namespace ClinicalOffice.ValidationFramework
         {
             return ValidateAttributes(obj, propertyName)?.ErrorMessage;
         }
-        public static IEnumerable<string> ValidateAttributesAsString(object obj)
+        public static string ValidateAttributesAsString(object obj)
+        {
+            return string.Concat(ValidateAttributesAsStrings(obj).Select(s => s + "\n")).Trim();
+        }
+        public static IEnumerable<string> ValidateAttributesAsStrings(object obj)
         {
             return ValidateAttributes(obj).Select(e => e.ErrorMessage).ToList();
         }
@@ -163,7 +171,11 @@ namespace ClinicalOffice.ValidationFramework
         {
             return Validate(obj, propertyName)?.ErrorMessage;
         }
-        public static IEnumerable<string> ValidateAsString(this object obj)
+        public static string ValidateAsString(this object obj)
+        {
+            return string.Concat(ValidateAsStrings(obj).Select(s => s + "\n")).Trim();
+        }
+        public static IEnumerable<string> ValidateAsStrings(this object obj)
         {
             return Validate(obj).Select(e => e.ErrorMessage).ToList();
         }
