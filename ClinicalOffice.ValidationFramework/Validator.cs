@@ -12,11 +12,20 @@ namespace ClinicalOffice.ValidationFramework
     {
         #region Rules
         static readonly Dictionary<PropertyInfo, ValidationRules> PropertiesRules = new Dictionary<PropertyInfo, ValidationRules>();
+        static readonly Dictionary<Type, List<Func<object, string>>> ObjectsRules = new Dictionary<Type, List<Func<object, string>>>();
         static ValidationRules TryGetRules(Type type, string propertyName)
         {
             foreach (var item in PropertiesRules)
             {
                 if (item.Key.ReflectedType == type && item.Key.Name == propertyName) return item.Value;
+            }
+            return null;
+        }
+        static List<Func<object, string>> TryGetObjectRules(Type type)
+        {
+            foreach (var item in ObjectsRules)
+            {
+                if (item.Key == type) return item.Value;
             }
             return null;
         }
@@ -38,13 +47,31 @@ namespace ClinicalOffice.ValidationFramework
             PropertiesRules[typeof(T).GetProperty(propertyName)] = rules;
             return rules;
         }
+
+        public static void AddObjectRules<T>(Func<T, string> rule)
+        {
+            var type = typeof(T);
+            var rules = TryGetObjectRules(type);
+            if (rules == null)
+            {
+                rules = new List<Func<object, string>>();
+                ObjectsRules[type] = rules;
+            }
+            rules.Add((object obj) => rule((T)obj));
+        }
+        public static void SetObjectRules<T>(Func<T, string> rule)
+        {
+            var rules = new List<Func<object, string>>();
+            ObjectsRules[typeof(T)] = rules;
+            rules.Add((object obj) => rule((T)obj));
+        }
         #endregion
         #region Validate Rules
         public static ValidationError ValidateRules(object obj, string propertyName, object value)
         {
-            ValidationRules rules = TryGetRules(obj.GetType(), propertyName);
-            if (rules == null ) return null;
-            var result = rules.Validate(value);
+            string result = null;
+            var rules = TryGetRules(obj.GetType(), propertyName);
+            if (rules != null ) result = rules.Validate(value);
             return new ValidationError(propertyName, result);
         }
         public static ValidationError ValidateRules(object obj, string propertyName)
@@ -55,6 +82,15 @@ namespace ClinicalOffice.ValidationFramework
         {
             if (obj == null) return ValidationError.EmptyArray;
             var result = new List<ValidationError>();
+            var ObjectsRules = TryGetObjectRules(obj.GetType());
+            if (ObjectsRules != null)
+            {
+                foreach (var item in ObjectsRules)
+                {
+                    var s = item(obj);
+                    if (!string.IsNullOrWhiteSpace(s)) result.Add(new ValidationError("", s));
+                }
+            }
             foreach (var item in PropertyHelper.GetProperties(obj.GetType()))
             {
                 var error = ValidateRules(obj, item.Name);
