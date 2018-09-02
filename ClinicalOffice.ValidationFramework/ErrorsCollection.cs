@@ -24,23 +24,28 @@ namespace ClinicalOffice.ValidationFramework
             var error = Errors.FirstOrDefault(e => e.PropertyName == propertyName);
             if (error == null)
             {
-                if (string.IsNullOrEmpty(errorMessage)) return null;
-                error = new ValidationError(propertyName, errorMessage);
-                Errors.Add(error);
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    error = new ValidationError(propertyName, errorMessage);
+                    Errors.Add(error);
+                }
             }
             else
             {
                 if (string.IsNullOrEmpty(errorMessage) && string.IsNullOrEmpty(error.ErrorMessage))
                 {
                     Errors.Remove(error);
-                    return null;
+                    error = null;
                 }
-                if (error.ErrorMessage == errorMessage) return error;
-                error.ErrorMessage = errorMessage;
+                else
+                {
+                    //if (error.ErrorMessage == errorMessage) return error;
+                    error.ErrorMessage = errorMessage;
+                }
             }
-            if (string.IsNullOrWhiteSpace(error.ErrorMessage)) Errors.Remove(error);
+            if (string.IsNullOrWhiteSpace(error?.ErrorMessage)) Errors.Remove(error);
             ValidatableEntity?.NotifyErrorChanged(propertyName);
-            if (string.IsNullOrWhiteSpace(error.ErrorMessage)) return null;
+            if (string.IsNullOrWhiteSpace(error?.ErrorMessage)) return null;
             return error;
         }
         public ValidationError GetError(string propertyName)
@@ -64,7 +69,7 @@ namespace ClinicalOffice.ValidationFramework
         }
         public IEnumerable<string> GetErrorsAsStrings(string propertyName)
         {
-            return GetErrors(propertyName).Select(e => e.ErrorMessage).ToArray();
+            return GetErrors(propertyName).Select(e => e.ErrorMessage);
         }
         public IEnumerable<ValidationError> GetErrors()
         {
@@ -85,12 +90,12 @@ namespace ClinicalOffice.ValidationFramework
         public ValidationError Validate(string propertyName, object value)
         {
             var error = Entity.Validate(propertyName, value);
-            return SetError(propertyName, error.ErrorMessage);
+            return SetError(propertyName, error?.ErrorMessage);
         }
         public ValidationError Validate(string propertyName)
         {
             var error = Entity.Validate(propertyName);
-            return SetError(propertyName, error.ErrorMessage);
+            return SetError(propertyName, error?.ErrorMessage);
         }
         public IEnumerable<ValidationError> Validate()
         {

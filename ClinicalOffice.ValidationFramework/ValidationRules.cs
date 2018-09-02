@@ -30,6 +30,14 @@ namespace ClinicalOffice.ValidationFramework
         public ValidationRules StringLength(int max, int min = 0,
             string errorMessage = "Can not be less than $min$ characters nor more than $max$ characters.")
         {
+            if (max < 0) throw new ArgumentOutOfRangeException(nameof(max));
+            if (min < 0) throw new ArgumentOutOfRangeException(nameof(min));
+            if (max < min)
+            {
+                int a = max;
+                max = min;
+                min = a;
+            }
             rules.Add((a) => (a != null && a.ToString().Length >= min && a.ToString().Length <= max) ?
             "" : errorMessage.Replace("$min$", min.ToString()).Replace("$max$", max.ToString()));
             return this;
