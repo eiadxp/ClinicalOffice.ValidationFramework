@@ -14,6 +14,7 @@ namespace ClinicalOffice.ValidationFramework
         static readonly ConcurrentDictionary<PropertyInfo, Delegate> _CachedGetters = new ConcurrentDictionary<PropertyInfo, Delegate>();
         static Delegate CreateGetter(PropertyInfo propertyInfo)
         {
+            if (propertyInfo == null) return null;
             var parameter = Expression.Parameter(propertyInfo.DeclaringType);
             var propertyExpression = Expression.Property(parameter, propertyInfo);
             var lambdaExpression = Expression.Lambda(propertyExpression, parameter);
@@ -34,13 +35,15 @@ namespace ClinicalOffice.ValidationFramework
             {
                 var pi = type.GetProperty(propertyName);
                 getter = CreateGetter(pi);
-                _CachedGetters[pi] = getter;
+                if (getter != null) _CachedGetters[pi] = getter;
             }
             return getter;
         }
         public static object GetValue(object obj, string propertyName)
         {
             var getter = GetPrpertyGetter(obj.GetType(), propertyName);
+            if (getter == null)
+                throw new InvalidOperationException("Can not get property getter.");
             return getter.DynamicInvoke(obj);
         }
         #endregion
